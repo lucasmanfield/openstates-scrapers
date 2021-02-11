@@ -145,11 +145,7 @@ class WVBillScraper(Scraper):
         url,
         strip_sponsors=re.compile(r"\s*\(.{,50}\)\s*").sub,
     ):
-
-        html = self.get(url).text
-
-        page = lxml.html.fromstring(html)
-        page.make_links_absolute(url)
+        
 
         bill_type = self.bill_types[bill_id.split()[0][1:]]
 
@@ -161,6 +157,18 @@ class WVBillScraper(Scraper):
             classification=bill_type,
         )
         bill.add_source(url)
+
+        try:
+            html = self.get(url).text
+        except:
+            self.warning("Unable to download bill text")
+            yield bill
+            return
+
+        page = lxml.html.fromstring(html)
+        page.make_links_absolute(url)
+
+        
 
         xpath = '//strong[contains(., "SUBJECT")]/../' "following-sibling::td/a/text()"
         bill.subject = page.xpath(xpath)
